@@ -1,4 +1,4 @@
-const url = "https://search.drugprices.co";
+const url = "http://34.172.158.252";
 
 const _search = (key, url) => (path, method, body) =>
   new Promise(async (acc, reject) => {
@@ -26,34 +26,63 @@ const search = _search(
   `${url}`
 );
 let lastSearch = "";
+let groupDrugs = (a, v) => {
+  if (v._formatted.drugname.indexOf("<em>") != -1) {
+    if (!a[btoa(v.drugname)]) {
+      a[btoa(v.drugname)] = {
+        id: btoa(v.drugname),
+        count: 1,
+        name: v.drugname,
+        nameHighlight: v._formatted.drugname,
+        documents: [v],
+      };
+    } else {
+      a[btoa(v.drugname)].count++;
+      a[btoa(v.drugname)].documents.push(v);
+    }
+  }
+  return a;
+};
 document.querySelector(".search").addEventListener("keyup", (e) => {
-  if (e.target.value) {
+  if (e.target.value.length > 3) {
     lastSearch = e.target.value;
     search("indexes/drugs/search", "POST", {
       q: e.target.value,
       attributesToHighlight: ["drugname"],
       limit: 200,
     }).then((data) => {
-      if (lastSearch == e.target.value) {
-        results = data.hits.reduce((a, v) => {
-          if (!a[btoa(v.drugname)]) {
-            a[btoa(v.drugname)] = {
-              id: btoa(v.drugname),
-              count: 1,
-              name: v.drugname,
-              nameHighlight: v._formatted.drugname,
-              documents: [v],
-            };
-          } else {
-            a[btoa(v.drugname)].count++;
-            a[btoa(v.drugname)].documents.push(v);
-          }
-          return a;
-        }, {});
+      if (lastSearch == document.querySelector(".search").value) {
+        results = data.hits.reduce(groupDrugs, {});
         renderResults();
+        if (data.nbHits > 200) {
+          const q = document.querySelector(".search").value;
+          Promise.all(
+            Array(Math.ceil(data.nbHits / 1000))
+              .fill(null)
+              .map((a, i) => {
+                return search("indexes/drugs/search", "POST", {
+                  q: q,
+                  attributesToHighlight: ["drugname"],
+                  limit: 1000,
+                  offset: i * 1000,
+                });
+              })
+          ).then((data) => {
+            if (lastSearch == document.querySelector(".search").value) {
+              results = data
+                .map((d) => d.hits)
+                .flat()
+                .reduce(groupDrugs, {});
+              renderResults();
+            }
+          });
+        }
       }
     });
-  } else renderResults([]);
+  } else {
+    results = [];
+    renderResults();
+  }
 });
 let results = {};
 let result = {};
@@ -97,6 +126,5 @@ async function drugSelected(id) {
       );
 
     document.querySelector(".search").value = "";
-
   });
 }
