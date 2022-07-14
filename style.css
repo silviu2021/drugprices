@@ -1,0 +1,33 @@
+.result em {
+  background-color: yellow;
+}
+
+.result {
+  cursor: pointer;
+}
+.result:hover {
+  background-color: pink;
+}
+
+
+.drug-wrapper{
+    margin: 40px;
+    display: none;
+}
+.drug-wrapper.show{
+    display: block;
+}
+.drug-wrapper .header{
+    background-color: red;
+}
+.drug-wrapper .header,
+.drug-wrapper .items .item {
+  display: flex;
+  width: 100%;
+  justify-content: space-evenly;
+}
+
+.drug-wrapper .items .item > div,
+.drug-wrapper .header > div {
+  width: 16.6%;
+}
