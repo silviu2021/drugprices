@@ -44,7 +44,7 @@ let groupDrugs = (a, v) => {
   return a;
 };
 document.querySelector(".search").addEventListener("keyup", (e) => {
-  if (e.target.value.length > 3) {
+  if (e.target.value.length > 2) {
     lastSearch = e.target.value;
     search("indexes/drugs/search", "POST", {
       q: e.target.value,
