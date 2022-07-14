@@ -1,4 +1,4 @@
-const url = "http://34.172.158.252";
+const url = "https://search.drugprices.co";
 
 const _search = (key, url) => (path, method, body) =>
   new Promise(async (acc, reject) => {
